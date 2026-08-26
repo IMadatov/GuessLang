@@ -1,23 +1,14 @@
 use regex::Regex;
 use std::sync::OnceLock;
 use crate::models::{TypeDetector, AnalysisResult};
+use crate::detectors::utils::detect_with_regex;
 
 pub struct UrlDetector;
 pub struct EmailDetector;
 pub struct IpDetector;
 pub struct MacDetector;
 
-fn detect_with_regex(text: &str, re: &Regex, type_name: &str) -> Option<AnalysisResult> {
-    if re.is_match(text) {
-        Some(AnalysisResult {
-            detected_type: type_name.to_string(),
-            sub_type: None,
-            confidence_score: 1.0,
-        })
-    } else {
-        None
-    }
-}
+
 
 impl TypeDetector for UrlDetector {
     fn detect(&self, text: &str) -> Option<AnalysisResult> {
