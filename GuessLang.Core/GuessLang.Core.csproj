@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    
+    <PackageId>GuessLang.TextAnalyzer</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>GuessLang Authors</Authors>
+    <Description>A high-performance universal text format analyzer powered by Rust.</Description>
+    <PackageTags>text analyzer json url email ip regex ffi rust</PackageTags>
+    <RepositoryUrl>https://github.com/IMadatov/GuessLang</RepositoryUrl>
+  </PropertyGroup>
+
+  <!-- Include Native Rust Libraries in the NuGet Package -->
+  <ItemGroup>
+    <None Include="..\target\release\text_analyzer_core.dll" PackagePath="runtimes\win-x64\native\" Pack="true" Condition="Exists('..\target\release\text_analyzer_core.dll')" />
+    <None Include="..\target\release\libtext_analyzer_core.so" PackagePath="runtimes\linux-x64\native\" Pack="true" Condition="Exists('..\target\release\libtext_analyzer_core.so')" />
+    <None Include="..\target\release\libtext_analyzer_core.dylib" PackagePath="runtimes\osx-x64\native\" Pack="true" Condition="Exists('..\target\release\libtext_analyzer_core.dylib')" />
+  </ItemGroup>
+
+</Project>

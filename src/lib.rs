@@ -1,6 +1,7 @@
 pub mod models;
 pub mod engine;
 pub mod detectors;
+pub mod ffi;
 
 pub fn analyze_text(_text: &str) -> models::AnalysisResult {
     let mut engine = engine::AnalyzerEngine::new();

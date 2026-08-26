@@ -1,4 +1,6 @@
-#[derive(Debug, PartialEq)]
+use serde::Serialize;
+
+#[derive(Debug, PartialEq, Serialize)]
 pub struct AnalysisResult {
     pub detected_type: String,
     pub sub_type: Option<String>,

@@ -1,0 +1,97 @@
+name: Build and Publish NuGet Package
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  release:
+    types: [published]
+
+jobs:
+  build-rust:
+    name: Build Rust Native Library
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            ext: so
+            os_name: linux-x64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            ext: dll
+            os_name: win-x64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            ext: dylib
+            os_name: osx-x64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload Native Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.os_name }}
+          path: |
+            target/${{ matrix.target }}/release/*.so
+            target/${{ matrix.target }}/release/*.dll
+            target/${{ matrix.target }}/release/*.dylib
+
+  pack-and-publish:
+    name: Pack NuGet and Publish
+    needs: build-rust
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Download Linux Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: native-linux-x64
+          path: target/release/
+
+      - name: Download Windows Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: native-win-x64
+          path: target/release/
+
+      - name: Download MacOS Binary
+        uses: actions/download-artifact@v4
+        with:
+          name: native-osx-x64
+          path: target/release/
+
+      - name: Pack NuGet Package
+        run: dotnet pack GuessLang.Core/GuessLang.Core.csproj -c Release -o ./out
+
+      - name: Upload NuGet Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package
+          path: ./out/*.nupkg
+
+      - name: Publish to NuGet (if API Key is present)
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [ ! -z "$NUGET_API_KEY" ]; then
+            dotnet nuget push ./out/*.nupkg -k $NUGET_API_KEY -s https://api.nuget.org/v3/index.json --skip-duplicate
+          else
+            echo "NUGET_API_KEY is not set. Skipping publish."
+          fi
